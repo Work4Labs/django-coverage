@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from optparse import make_option
 
 from django.conf import settings
 from django.core.management import call_command
@@ -20,11 +21,17 @@ from django.core.management.commands import test
 
 from django_coverage import settings as coverage_settings
 
+
 class Command(test.Command):
     help = ("Runs the test suite for the specified applications, or the "
             "entire site if no apps are specified. Then generates coverage "
             "report both onscreen and as HTML.")
-
+    option_list = test.Command.option_list + (
+        make_option(
+            '--html', action='store_true', dest='html', default=False,
+            help='Output an HTML report.'
+        )
+    )
     def handle(self, *test_labels, **options):
         """
         Replaces the original test runner with the coverage test runner, but
@@ -34,5 +41,6 @@ class Command(test.Command):
         """
         coverage_settings.ORIG_TEST_RUNNER = settings.TEST_RUNNER
         settings.TEST_RUNNER = coverage_settings.COVERAGE_TEST_RUNNER
-        call_command('test', *test_labels, **options)
 
+        coverage_settings.COVERAGE_OUTPUT_HTML_REPORT = options["html"]
+        call_command('test', *test_labels, **options)
