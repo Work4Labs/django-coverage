@@ -28,7 +28,8 @@ Install as a Django app
 
 Once you've completed all the steps, you'll have a new custom command
 available to you via ``manage.py test_coverage``. It works just like
-``manage.py test``.
+``manage.py test``. You can append the ``--html`` option in order to
+generate an HTML report.
 
 Use it as a test runner
 -----------------------

@@ -15,6 +15,7 @@ limitations under the License.
 
 """
 import os
+from StringIO import StringIO
 import sys
 
 import django
@@ -73,9 +74,7 @@ class CoverageRunner(DjangoTestSuiteRunner):
         for e in settings.COVERAGE_CODE_EXCLUDES:
             cov.exclude(e)
         cov.start()
-        results = super(CoverageRunner, self).run_tests(
-            test_labels, extra_tests, **kwargs
-        )
+        results = super(CoverageRunner, self).run_tests(test_labels, extra_tests, **kwargs)
         cov.stop()
 
         coverage_modules = []
@@ -94,8 +93,10 @@ class CoverageRunner(DjangoTestSuiteRunner):
             coverage_modules, settings.COVERAGE_MODULE_EXCLUDES,
             settings.COVERAGE_PATH_EXCLUDES)
 
-        coverage_value = cov.report(modules.values(), show_missing=1)
+        outfile = StringIO()
+        coverage_value = cov.report(modules.values(), show_missing=1, outfile=outfile)
         if settings.COVERAGE_USE_STDOUT:
+            print >>sys.stdout, outfile.getvalue()
             if excludes:
                 message = "The following packages or modules were excluded:"
                 print >>sys.stdout
@@ -122,7 +123,7 @@ class CoverageRunner(DjangoTestSuiteRunner):
             print >>sys.stdout
             print >>sys.stdout, "HTML reports were output to '%s'" %outdir
 
-        coverage_fails = (coverage_value < settings.COVERAGE_FAIL_UNDER)
+        coverage_fails = coverage_value < settings.COVERAGE_FAIL_UNDER
         if coverage_fails:
             msg = "Test coverage failed: %0.2f%% is less than %0.2f%% !" % (coverage_value, settings.COVERAGE_FAIL_UNDER)
             print >>sys.stdout, msg

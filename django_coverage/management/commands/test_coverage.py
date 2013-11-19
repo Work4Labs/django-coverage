@@ -28,7 +28,7 @@ class Command(test.Command):
             "report both onscreen and as HTML.")
     option_list = test.Command.option_list + (
         make_option(
-            '--html', action='store_true', dest='html', default=False,
+            '--html', action='store', dest='html', default=None,
             help='Output an HTML report.'
         )
     )
@@ -42,5 +42,8 @@ class Command(test.Command):
         coverage_settings.ORIG_TEST_RUNNER = settings.TEST_RUNNER
         settings.TEST_RUNNER = coverage_settings.COVERAGE_TEST_RUNNER
 
-        coverage_settings.COVERAGE_OUTPUT_HTML_REPORT = options["html"]
+        no_html = ["false", "no", "0"]
+        if options["html"] is not None:
+            coverage_settings.COVERAGE_OUTPUT_HTML_REPORT = options["html"].lower() not in no_html
+
         call_command('test', *test_labels, **options)
