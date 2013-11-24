@@ -15,6 +15,7 @@ limitations under the License.
 
 """
 import os
+from StringIO import StringIO
 import sys
 
 import django
@@ -31,7 +32,7 @@ from django.conf import global_settings
 from django.db.models import get_app, get_apps
 from django.test.utils import get_runner
 
-import coverage
+from coverage import coverage
 
 from django_coverage import settings
 from django_coverage.utils.coverage_report import html_report
@@ -68,13 +69,13 @@ class CoverageRunner(DjangoTestSuiteRunner):
         return '.'.join(app_model_module.__name__.split('.')[:-1])
 
     def run_tests(self, test_labels, extra_tests=None, **kwargs):
-        coverage.use_cache(settings.COVERAGE_USE_CACHE)
+        cov = coverage(config_file=settings.COVERAGE_CONFIG_FILE)
+        cov.use_cache(settings.COVERAGE_USE_CACHE)
         for e in settings.COVERAGE_CODE_EXCLUDES:
-            coverage.exclude(e)
-        coverage.start()
-        results = super(CoverageRunner, self).run_tests(test_labels,
-                                                        extra_tests, **kwargs)
-        coverage.stop()
+            cov.exclude(e)
+        cov.start()
+        results = super(CoverageRunner, self).run_tests(test_labels, extra_tests, **kwargs)
+        cov.stop()
 
         coverage_modules = []
         if test_labels:
@@ -92,8 +93,10 @@ class CoverageRunner(DjangoTestSuiteRunner):
             coverage_modules, settings.COVERAGE_MODULE_EXCLUDES,
             settings.COVERAGE_PATH_EXCLUDES)
 
+        outfile = StringIO()
+        coverage_value = cov.report(modules.values(), show_missing=1, outfile=outfile)
         if settings.COVERAGE_USE_STDOUT:
-            coverage.report(modules.values(), show_missing=1)
+            print >>sys.stdout, outfile.getvalue()
             if excludes:
                 message = "The following packages or modules were excluded:"
                 print >>sys.stdout
@@ -111,13 +114,19 @@ class CoverageRunner(DjangoTestSuiteRunner):
                 print >>sys.stdout
 
         outdir = settings.COVERAGE_REPORT_HTML_OUTPUT_DIR
-        if outdir:
+        if outdir and settings.COVERAGE_OUTPUT_HTML_REPORT:
             outdir = os.path.abspath(outdir)
             if settings.COVERAGE_CUSTOM_REPORTS:
                 html_report(outdir, modules, excludes, errors)
             else:
-                coverage._the_coverage.html_report(modules.values(), outdir)
+                cov.html_report(modules.values(), outdir)
             print >>sys.stdout
             print >>sys.stdout, "HTML reports were output to '%s'" %outdir
 
-        return results
+        coverage_fails = coverage_value < settings.COVERAGE_FAIL_UNDER
+        if coverage_fails:
+            msg = "Test coverage failed: %0.2f%% is less than %0.2f%% !" % (coverage_value, settings.COVERAGE_FAIL_UNDER)
+            print >>sys.stdout, msg
+
+        # from https://github.com/django/django/blob/master/django/core/management/commands/test.py#L90-L91
+        return results or coverage_fails

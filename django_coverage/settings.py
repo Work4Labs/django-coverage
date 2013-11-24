@@ -70,9 +70,14 @@ COVERAGE_MODULE_EXCLUDES = getattr(settings, 'COVERAGE_MODULE_EXCLUDES',
 # You should probably set this one explicitly in your own settings file.
 
 #COVERAGE_REPORT_HTML_OUTPUT_DIR = '/my_home/test_html'
-COVERAGE_REPORT_HTML_OUTPUT_DIR = getattr(settings,
-                                          'COVERAGE_REPORT_HTML_OUTPUT_DIR',
-                                          None)
+COVERAGE_REPORT_HTML_OUTPUT_DIR = getattr(
+    settings, 'COVERAGE_REPORT_HTML_OUTPUT_DIR', None
+)
+
+# Set to False if you don't want to output HTML systematically *if* you
+# have the HTML_OUTPUT_DIR setting set. If False, you can generate HTML
+# report using the command html_report
+COVERAGE_OUTPUT_HTML_REPORT = getattr(settings, 'COVERAGE_OUTPUT_HTML_REPORT', False)
 
 # True => html reports by 55minutes
 # False => html reports by coverage.py
@@ -90,3 +95,10 @@ COVERAGE_USE_STDOUT = getattr(settings, 'COVERAGE_USE_STDOUT', COVERAGE_REPORT_H
 # The name of the folder within utils/coverage_report/badges/ that
 # contains the badges we want to use.
 COVERAGE_BADGE_TYPE = getattr(settings, 'COVERAGE_BADGE_TYPE', 'drone.io')
+
+# Specify a custom config file to pass to coverage. Note that settings might
+# be overriden by ones that are in this config file.
+COVERAGE_CONFIG_FILE = getattr(settings, 'COVERAGE_CONFIG_FILE', False)
+
+# Fail under a certain amount of coverage
+COVERAGE_FAIL_UNDER = getattr(settings, 'COVERAGE_FAIL_UNDER', 0)
