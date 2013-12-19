@@ -30,7 +30,7 @@ class Command(test.Command):
         make_option(
             '--html', action='store', dest='html', default=None,
             help='Output an HTML report.'
-        )
+        ),
     )
     def handle(self, *test_labels, **options):
         """
