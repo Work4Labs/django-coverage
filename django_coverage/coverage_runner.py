@@ -94,7 +94,7 @@ class CoverageRunner(DjangoTestSuiteRunner):
             settings.COVERAGE_PATH_EXCLUDES)
 
         outfile = StringIO()
-        coverage_value = cov.report(modules.values(), show_missing=1, outfile=outfile)
+        coverage_value = cov.report(modules.values(), show_missing=1, file=outfile)
         if settings.COVERAGE_USE_STDOUT:
             print >>sys.stdout, outfile.getvalue()
             if excludes:
@@ -125,8 +125,11 @@ class CoverageRunner(DjangoTestSuiteRunner):
 
         coverage_fails = coverage_value < settings.COVERAGE_FAIL_UNDER
         if coverage_fails:
-            msg = "Test coverage failed: %0.2f%% is less than %0.2f%% !" % (coverage_value, settings.COVERAGE_FAIL_UNDER)
-            print >>sys.stdout, msg
+            raise Exception(
+                "Test coverage failed: %0.2f%% is less than %0.2f%% !" % (
+                    coverage_value, settings.COVERAGE_FAIL_UNDER
+                )
+            )
 
         # from https://github.com/django/django/blob/master/django/core/management/commands/test.py#L90-L91
         return results or coverage_fails
